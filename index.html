@@ -116,6 +116,13 @@
   .wd.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-2)}
   .wd .dot{display:flex;align-items:center;justify-content:center;height:16px;margin-top:4px}
   .wd .dot svg{width:14px;height:14px;stroke:var(--accent-2);stroke-width:3;fill:none}
+  .swklabel{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin:16px 0 8px}
+  .swk{display:flex;gap:6px}
+  .swd{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px}
+  .swd .sbar{width:100%;height:40px;background:var(--surface-2);border:1px solid var(--border);border-radius:7px;display:flex;align-items:flex-end;overflow:hidden}
+  .swd.today .sbar{border-color:var(--accent);border-width:1.5px}
+  .swd .sfill{width:100%;border-radius:0 0 6px 6px;transition:height .4s ease}
+  .swd .sday{font-size:10px;color:var(--muted);font-weight:700}
   .streakline{display:flex;align-items:center;gap:8px;margin-top:14px;color:var(--text-2);font-size:13.5px;font-weight:600}
   .streakline b{color:var(--text);font-weight:800}
 
@@ -342,6 +349,7 @@
           <div class="stat"><span>Step streak</span><b id="streak">0</b></div>
         </div>
       </div>
+      <div id="stepWeek"></div>
       <div style="display:flex;gap:10px;margin-top:16px">
         <input type="number" id="stepInput" placeholder="Enter today's steps" inputmode="numeric">
         <button class="btn" onclick="saveSteps()">Save</button>
@@ -682,6 +690,16 @@ function editGoal(){
 function saveGoal(){ const v=parseInt(document.getElementById('goalInput').value,10);
   if(isNaN(v)||v<500){ toast('Enter a realistic goal'); return; }
   state.goal=v; DB.set('goal',v); closeEx(); renderDash(); toast('Goal updated'); }
+function renderStepWeek(){
+  const el=document.getElementById('stepWeek'); if(!el) return;
+  const mon=new Date(weekKey()+'T00:00:00'), tkey=todayKey(); let cells='';
+  for(let i=0;i<7;i++){ const d=new Date(mon); d.setDate(mon.getDate()+i); const k=d.toISOString().slice(0,10);
+    const v=state.steps[k]||0, pct=Math.min(v/state.goal*100,100), hit=v>=state.goal, isToday=k===tkey, future=k>tkey;
+    cells+=`<div class="swd ${isToday?'today':''}" title="${DAYS[i]} ${ddmm(k)} · ${fmt(v)} steps">
+      <div class="sbar">${future?'':`<div class="sfill" style="height:${v>0?Math.max(pct,10):0}%;background:${hit?'var(--grad)':'#cdd6c5'}"></div>`}</div>
+      <div class="sday">${DAYS[i][0]}</div></div>`; }
+  el.innerHTML=`<div class="swklabel">This week's steps</div><div class="swk">${cells}</div>`;
+}
 function calcStreak(){ let s=0; const d=new Date();
   if((state.steps[todayKey()]||0)<state.goal) d.setDate(d.getDate()-1);
   for(;;){ const k=d.toISOString().slice(0,10); if((state.steps[k]||0)>=state.goal){ s++; d.setDate(d.getDate()-1); } else break; } return s; }
@@ -729,6 +747,7 @@ function renderDash(){
   document.getElementById('stepGoalLbl').textContent=Math.round(pct*100)+'% of goal';
   document.getElementById('streak').textContent=calcStreak();
   document.getElementById('ringFg').style.strokeDashoffset=(2*Math.PI*52)*(1-pct);
+  renderStepWeek();
   const i=dayIdx(), focus=state.plan[i], wk=state.planDone[weekKey()]||{}, key=routineKeyForDay(focus);
   const hero=document.getElementById('heroToday');
   if(!focus||focus.toLowerCase()==='rest'){
