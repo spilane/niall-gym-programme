@@ -496,7 +496,8 @@
 /* ---------- storage ---------- */
 const DB={ get(k,d){ try{return JSON.parse(localStorage.getItem('ft_'+k)) ?? d}catch(e){return d} },
   set(k,v){ try{ localStorage.setItem('ft_'+k,JSON.stringify(v)); }catch(e){ try{ toast('Storage full — back up your data to free space'); }catch(_){} } } };
-const todayKey=()=>new Date().toISOString().slice(0,10);
+function ymd(d){ d=d||new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); } // local-time YYYY-MM-DD
+const todayKey=()=>ymd();
 const fmt=n=>Number(n||0).toLocaleString();
 function ddmm(s){ const p=String(s).split('-'); return p.length===3?p[2]+'/'+p[1]:s; } // YYYY-MM-DD -> DD/MM
 const esc=s=>String(s).replace(/'/g,"\\'");
@@ -632,10 +633,10 @@ function routineKeyForDay(f){ if(!f)return null; if(/circuit a/i.test(f))return'
 function dayForCircuit(key){ return state.plan.findIndex(f=>routineKeyForDay(f)===key); }
 const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 function dayIdx(){ return (new Date().getDay()+6)%7; }
-function weekKey(){ const d=new Date(); d.setDate(d.getDate()-((d.getDay()+6)%7)); return d.toISOString().slice(0,10); }
-function weekStartOf(s){ const x=new Date(s+'T00:00:00'); x.setDate(x.getDate()-((x.getDay()+6)%7)); return x.toISOString().slice(0,10); }
-function lastNDates(n){ const a=[]; const d=new Date(); for(let i=n-1;i>=0;i--){ const x=new Date(d); x.setDate(d.getDate()-i); a.push(x.toISOString().slice(0,10)); } return a; }
-function lastNWeeks(n){ const a=[]; const d=new Date(); d.setDate(d.getDate()-((d.getDay()+6)%7)); for(let i=n-1;i>=0;i--){ const x=new Date(d); x.setDate(d.getDate()-i*7); a.push(x.toISOString().slice(0,10)); } return a; }
+function weekKey(){ const d=new Date(); d.setDate(d.getDate()-((d.getDay()+6)%7)); return ymd(d); }
+function weekStartOf(s){ const x=new Date(s+'T00:00:00'); x.setDate(x.getDate()-((x.getDay()+6)%7)); return ymd(x); }
+function lastNDates(n){ const a=[]; const d=new Date(); for(let i=n-1;i>=0;i--){ const x=new Date(d); x.setDate(d.getDate()-i); a.push(ymd(x)); } return a; }
+function lastNWeeks(n){ const a=[]; const d=new Date(); d.setDate(d.getDate()-((d.getDay()+6)%7)); for(let i=n-1;i>=0;i--){ const x=new Date(d); x.setDate(d.getDate()-i*7); a.push(ymd(x)); } return a; }
 const CHK='<svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></svg>';
 const PLAY='<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
 
@@ -659,7 +660,7 @@ function saveSteps(){ const v=parseInt(document.getElementById('stepInput').valu
   state.steps[todayKey()]=v; DB.set('steps',state.steps); document.getElementById('stepInput').value=''; renderDash(); toast('Steps saved'); }
 function addSteps(n){ state.steps[todayKey()]=(state.steps[todayKey()]||0)+n; DB.set('steps',state.steps); renderDash(); toast('+'+fmt(n)+' steps'); }
 function logPastDay(kind){
-  const isW=kind==='water', yest=new Date(Date.now()-86400000).toISOString().slice(0,10);
+  const isW=kind==='water', yest=ymd(new Date(Date.now()-86400000));
   document.getElementById('exSheet').innerHTML=`
     <div class="grab"></div><h3>Add ${isW?'water':'steps'} for another day</h3>
     <p class="meta">Forgot to log ${isW?'your water':'your steps'}? Pick the day and pop it in.</p>
@@ -694,7 +695,7 @@ function saveGoal(){ const v=parseInt(document.getElementById('goalInput').value
 function renderStepWeek(){
   const el=document.getElementById('stepWeek'); if(!el) return;
   const mon=new Date(weekKey()+'T00:00:00'), tkey=todayKey(); let cells='';
-  for(let i=0;i<7;i++){ const d=new Date(mon); d.setDate(mon.getDate()+i); const k=d.toISOString().slice(0,10);
+  for(let i=0;i<7;i++){ const d=new Date(mon); d.setDate(mon.getDate()+i); const k=ymd(d);
     const v=state.steps[k]||0, hit=v>=state.goal, some=v>0&&!hit, future=k>tkey;
     const cls=hit?'on':(some?'train':'');
     const dot=hit?CHK:(some?`<span class="skm">${(v/1000).toFixed(v<10000?1:0)}k</span>`:(future?'<span style="color:var(--border-2)">·</span>':'<span style="color:var(--muted)">–</span>'));
@@ -703,7 +704,7 @@ function renderStepWeek(){
 }
 function calcStreak(){ let s=0; const d=new Date();
   if((state.steps[todayKey()]||0)<state.goal) d.setDate(d.getDate()-1);
-  for(;;){ const k=d.toISOString().slice(0,10); if((state.steps[k]||0)>=state.goal){ s++; d.setDate(d.getDate()-1); } else break; } return s; }
+  for(;;){ const k=ymd(d); if((state.steps[k]||0)>=state.goal){ s++; d.setDate(d.getDate()-1); } else break; } return s; }
 
 /* ---------- dashboard ---------- */
 const QUOTES=[
@@ -873,7 +874,7 @@ function renderGoalPlan(){
     <p class="muted" style="margin-top:11px">At this pace: about <b style="color:var(--text)">${weeks} weeks</b> — target by <b style="color:var(--text)">${eta.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})}</b>.${T.capped?'<br><span style="color:var(--amber)">Calories capped to a safe minimum — consider a gentler pace.</span>':''}</p>`;
 }
 function weekDatesSoFar(){ const arr=[]; const mon=new Date(weekKey()+'T00:00:00'), today=todayKey();
-  for(let i=0;i<7;i++){ const d=new Date(mon); d.setDate(mon.getDate()+i); const k=d.toISOString().slice(0,10); arr.push(k); if(k===today) break; } return arr; }
+  for(let i=0;i<7;i++){ const d=new Date(mon); d.setDate(mon.getDate()+i); const k=ymd(d); arr.push(k); if(k===today) break; } return arr; }
 function renderCoach(){
   const el=document.getElementById('coachCard'); if(!el) return;
   const wk=state.planDone[weekKey()]||{}, trainDays=state.plan.filter(routineKeyForDay).length||3;
@@ -915,7 +916,7 @@ function renderCoach(){
 }
 function weightRatePerWeek(){
   const ks=Object.keys(state.bw).sort(); if(ks.length<2) return null;
-  const cutoff=new Date(Date.now()-21*86400000).toISOString().slice(0,10);
+  const cutoff=ymd(new Date(Date.now()-21*86400000));
   const recent=ks.filter(k=>k>=cutoff); const use=recent.length>=2?recent:ks.slice(-2);
   const a=use[0], b=use[use.length-1];
   const days=(new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/86400000; if(days<3) return null;
@@ -1164,13 +1165,13 @@ function saveActivity(type){
   toast(type+' logged'+(k!==todayKey()?' for '+ddmm(k):'')+' · ~'+fmt(kcal)+' kcal');
 }
 function delActivity(i){ const k=todayKey(); if(state.activities[k]){ state.activities[k].splice(i,1); if(!state.activities[k].length) delete state.activities[k]; DB.set('activities',state.activities); renderActivity(); renderDash(); } }
-function activityMinsWeek(wkStart){ let m=0; for(let i=0;i<7;i++){ const d=new Date(wkStart+'T00:00:00'); d.setDate(d.getDate()+i); (state.activities[d.toISOString().slice(0,10)]||[]).forEach(a=>m+=a.mins||0); } return m; }
+function activityMinsWeek(wkStart){ let m=0; for(let i=0;i<7;i++){ const d=new Date(wkStart+'T00:00:00'); d.setDate(d.getDate()+i); (state.activities[ymd(d)]||[]).forEach(a=>m+=a.mins||0); } return m; }
 function runList(){ const out=[]; Object.keys(state.activities).sort().forEach(d=>activitiesOn(d).forEach(a=>{ if(a.type==='Run') out.push({d,dist:a.dist||0,mins:a.mins||0,pace:(a.dist>0&&a.mins>0)?a.mins/a.dist:0}); })); return out; }
 function lastRun(){ const l=runList(); return l.length?l[l.length-1]:null; }
 function runPB(){ const l=runList().filter(r=>r.dist>0); if(!l.length) return null;
   const dist=Math.max(...l.map(r=>r.dist)); const paced=l.filter(r=>r.pace>0);
   return {dist, pace:paced.length?Math.min(...paced.map(r=>r.pace)):0}; }
-function hasActivityInWeek(ws){ for(let i=0;i<7;i++){ const d=new Date(ws+'T00:00:00'); d.setDate(d.getDate()+i); if((state.activities[d.toISOString().slice(0,10)]||[]).length) return true; } return false; }
+function hasActivityInWeek(ws){ for(let i=0;i<7;i++){ const d=new Date(ws+'T00:00:00'); d.setDate(d.getDate()+i); if((state.activities[ymd(d)]||[]).length) return true; } return false; }
 function activityWeekStreak(){ const weeks=lastNWeeks(26).reverse(); let s=0; for(let i=0;i<weeks.length;i++){ const has=hasActivityInWeek(weeks[i]); if(i===0&&!has) continue; if(has) s++; else break; } return s; }
 
 /* ---------- measurements ---------- */
@@ -1370,6 +1371,7 @@ function saveProfile(){
 
 /* ---------- food / calorie tracker (Open Food Facts) ---------- */
 const OFF='https://world.openfoodfacts.org';
+const OFF_SEARCH='https://ie.openfoodfacts.org'; // Irish locale — surfaces products sold in Ireland first
 const OFF_FIELDS='product_name,brands,nutriments,serving_size';
 function offKcal(nu){ return nu&&(+nu['energy-kcal_100g']||+nu['energy-kcal_serving']||0); }
 function offN(nu,k){ return (nu&&+nu[k])||0; }
@@ -1388,14 +1390,14 @@ function burnedOn(d){
   return Math.round(stepBurn+woBurn+activitiesKcal(d));
 }
 function loggingStreak(){ let s=0; const d=new Date(); if(macrosOf(foodOn(todayKey())).kcal<=0) d.setDate(d.getDate()-1);
-  for(;;){ const k=d.toISOString().slice(0,10); if(macrosOf(foodOn(k)).kcal>0){s++; d.setDate(d.getDate()-1);} else break; } return s; }
+  for(;;){ const k=ymd(d); if(macrosOf(foodOn(k)).kcal>0){s++; d.setDate(d.getDate()-1);} else break; } return s; }
 function onTargetStreak(){ const T=calcTargets().kcal; let s=0; const d=new Date();
   if(macrosOf(foodOn(todayKey())).kcal<=0) d.setDate(d.getDate()-1);
-  for(;;){ const k=d.toISOString().slice(0,10); const kc=macrosOf(foodOn(k)).kcal; if(kc>0&&kc<=T*1.05){s++; d.setDate(d.getDate()-1);} else break; } return s; }
+  for(;;){ const k=ymd(d); const kc=macrosOf(foodOn(k)).kcal; if(kc>0&&kc<=T*1.05){s++; d.setDate(d.getDate()-1);} else break; } return s; }
 function foodShift(n){ const d=new Date(foodDate+'T00:00:00'); d.setDate(d.getDate()+n);
-  const nd=d.toISOString().slice(0,10); if(nd>todayKey()) return; foodDate=nd; renderFood(); }
+  const nd=ymd(d); if(nd>todayKey()) return; foodDate=nd; renderFood(); }
 function foodDateLabel(){ if(foodDate===todayKey()) return 'Today';
-  const y=new Date(Date.now()-86400000).toISOString().slice(0,10); if(foodDate===y) return 'Yesterday';
+  const y=ymd(new Date(Date.now()-86400000)); if(foodDate===y) return 'Yesterday';
   return new Date(foodDate+'T00:00:00').toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'}); }
 function macrosOf(day){ return day.reduce((a,f)=>({kcal:a.kcal+(f.kcal||0),p:a.p+(f.p||0),c:a.c+(f.c||0),f:a.f+(f.f||0)}),{kcal:0,p:0,c:0,f:0}); }
 function macroBar(name,val,target,color){
@@ -1605,9 +1607,11 @@ async function lookupBarcode(code){
   try{
     const r=await fetch(OFF+'/api/v2/product/'+encodeURIComponent(code)+'.json?fields=product_name,brands,nutriments,serving_size');
     const d=await r.json();
-    if(d.status!==1||!d.product||!offKcal(d.product.nutriments)){ scanFallback('No calorie info found for '+code+'. Try searching by name.'); return; }
-    d.product.code=code; openFromProduct(d.product);
-  }catch(e){ scanFallback('Couldn’t look that up. Check your connection or search by name.'); }
+    if(d.status===1 && d.product && (d.product.product_name || offKcal(d.product.nutriments))){
+      d.product.code=code; openFromProduct(d.product); return;   // found — open it (any missing values are editable)
+    }
+    createFood(code);   // not in the database yet — add once and I'll remember it against this barcode
+  }catch(e){ scanFallback('Couldn’t reach the food database — check your connection and try again, or add it below.'); }
 }
 function openFoodSearch(){
   document.getElementById('exSheet').innerHTML=`
@@ -1625,7 +1629,7 @@ async function runFoodSearch(){
   const q=(document.getElementById('foodQ').value||'').trim(); if(!q) return;
   const box=document.getElementById('foodResults'); box.innerHTML='<div class="empty">Searching…</div>';
   try{
-    const r=await fetch(OFF+'/cgi/search.pl?search_terms='+encodeURIComponent(q)+'&search_simple=1&json=1&page_size=24&fields=product_name,brands,nutriments,code,serving_size');
+    const r=await fetch(OFF_SEARCH+'/cgi/search.pl?search_terms='+encodeURIComponent(q)+'&search_simple=1&json=1&page_size=24&fields=product_name,brands,nutriments,code,serving_size');
     const d=await r.json();
     const items=(d.products||[]).filter(p=>p.product_name && offKcal(p.nutriments));
     if(!items.length){ box.innerHTML='<div class="empty">No results with calorie info. Try another term.</div>'; return; }
@@ -1702,12 +1706,17 @@ function addFromCalc(){
   saveFoodMem(cf.id, cf.name, cf.bc, m);   // remember edited values for next time
   addFood(cf.name, m.k*r, m.p*r, m.c*r, m.f*r, amountLabel());
 }
-function createFood(){
+function createFood(bc){
+  window._createBc=(typeof bc==='string' && /^\d{6,}$/.test(bc)) ? bc : '';
+  const isNew=!!window._createBc;
   document.getElementById('exSheet').innerHTML=`
-    <div class="grab"></div><h3>Create a food</h3>
-    <p class="meta">For anything without a barcode (e.g. butcher's meatballs). Enter the values per 100 g.</p>
-    <label>Name</label><input id="cfName" placeholder="e.g. Butcher's meatballs">
-    <div class="nums" style="grid-template-columns:1fr 1fr 1fr 1fr;margin-top:10px">
+    <div class="grab"></div><h3>${isNew?'New product':'Create a food'}</h3>
+    <p class="meta">${isNew
+      ? `Barcode <b>${window._createBc}</b> isn't in the food database yet. Add the label details and I'll <b>remember it against this barcode</b> — next time you scan it, it's instant.`
+      : `For anything without a barcode (e.g. butcher's meatballs). Enter the values per 100 g.`}</p>
+    <label>Name</label><input id="cfName" placeholder="${isNew?'e.g. Brand + product name':'e.g. butcher meatballs'}">
+    <p class="muted" style="margin:10px 0 0">Per 100 g — copy from the label's nutrition panel:</p>
+    <div class="nums" style="grid-template-columns:1fr 1fr 1fr 1fr;margin-top:8px">
       <div class="numfield"><label>Kcal</label><input type="number" id="vK" value="" inputmode="numeric" oninput="updateFoodCalc()"></div>
       <div class="numfield"><label>Protein</label><input type="number" id="vP" value="" inputmode="numeric" oninput="updateFoodCalc()"></div>
       <div class="numfield"><label>Carbs</label><input type="number" id="vC" value="" inputmode="numeric" oninput="updateFoodCalc()"></div>
@@ -1716,7 +1725,7 @@ function createFood(){
     <label style="margin-top:12px">How much did you have? (grams)</label>
     <input type="number" id="gramInput" value="100" inputmode="numeric" oninput="updateFoodCalc()">
     <div class="tiles" id="foodCalc" style="grid-template-columns:repeat(4,1fr);margin:12px 0 2px"></div>
-    <button class="btn block" style="margin-top:8px" onclick="addCreated()">Add &amp; save</button>
+    <button class="btn block" style="margin-top:8px" onclick="addCreated()">${isNew?'Save &amp; add':'Add &amp; save'}</button>
     <button class="btn-ghost block" style="margin-top:10px;justify-content:center" onclick="closeEx()">Cancel</button>`;
   document.getElementById('exModal').classList.add('show');
   updateFoodCalc();
@@ -1726,9 +1735,11 @@ function addCreated(){
   const g=parseFloat(document.getElementById('gramInput').value)||0, r=g/100, m=readPer100();
   if(!name){ toast('Give it a name'); return; }
   if(g<=0||(!m.k&&!m.p&&!m.c&&!m.f)){ toast('Add the nutrition & grams'); return; }
-  const id='nm:'+name.toLowerCase();
-  saveFoodMem(id,name,'',m);
+  const bc=window._createBc||'';
+  const id=bc?('bc:'+bc):('nm:'+name.toLowerCase());
+  saveFoodMem(id,name,bc,m);
   addFood(name, m.k*r, m.p*r, m.c*r, m.f*r, g+' g');
+  window._createBc='';
 }
 
 /* ---------- analytics ---------- */
@@ -1755,7 +1766,7 @@ const baseOpts={responsive:true,plugins:{legend:{display:false}},
   scales:{x:{grid:{color:gridClr},ticks:{color:tickClr,maxRotation:0,autoSkip:true,maxTicksLimit:8,font:{size:10}}},
           y:{grid:{color:gridClr},ticks:{color:tickClr,font:{size:10}},beginAtZero:true}}};
 function sessionDates(){ const out={}; Object.keys(state.planDone).forEach(ws=>{ const wk=state.planDone[ws];
-  Object.keys(wk).forEach(di=>{ if(wk[di]){ const d=new Date(ws+'T00:00:00'); d.setDate(d.getDate()+(+di)); out[d.toISOString().slice(0,10)]=+di; } }); }); return out; }
+  Object.keys(wk).forEach(di=>{ if(wk[di]){ const d=new Date(ws+'T00:00:00'); d.setDate(d.getDate()+(+di)); out[ymd(d)]=+di; } }); }); return out; }
 function trainWeekStreak(){ const trainDays=state.plan.filter(routineKeyForDay).length||3;
   const weeks=lastNWeeks(26).reverse(); let s=0, started=false;
   for(let i=0;i<weeks.length;i++){ const done=Object.values(state.planDone[weeks[i]]||{}).filter(Boolean).length;
@@ -1771,7 +1782,7 @@ function renderHistory(){
   const weeks=firstIdx>=0 ? all.slice(Math.min(firstIdx, all.length-4)) : all.slice(-4);
   const rows=weeks.map(ws=>{
     const cells=DAYS.map((dn,di)=>{
-      const d=new Date(ws+'T00:00:00'); d.setDate(d.getDate()+di); const k=d.toISOString().slice(0,10);
+      const d=new Date(ws+'T00:00:00'); d.setDate(d.getDate()+di); const k=ymd(d);
       const future=k>today, done=sess[k]!=null, train=!!routineKeyForDay(state.plan[di]);
       const acts=activitiesOn(k), hasAct=acts.length>0;
       const note=state.notes[ws+'|'+di];
