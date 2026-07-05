@@ -118,6 +118,9 @@
   .wd .dot svg{width:14px;height:14px;stroke:var(--accent-2);stroke-width:3;fill:none}
   .swklabel{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin:16px 0 8px}
   .skm{color:var(--accent-2);font-weight:800;font-size:10px}
+  .swtot{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;color:var(--text-2);font-weight:600}
+  .swtot b{color:var(--text);font-weight:800;font-size:16px}
+  .swtot .swavg{font-weight:700;font-size:12px}
   .swk{display:flex;gap:6px}
   .swd{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px}
   .swd .sbar{width:100%;height:40px;background:var(--surface-2);border:1px solid var(--border);border-radius:7px;display:flex;align-items:flex-end;overflow:hidden}
@@ -522,7 +525,8 @@ let state={
   swaps:DB.get('swaps',{}),          // { 'A::Goblet Squat': {n,reps,unit,vid} }
   notes:DB.get('notes',{}),          // { 'weekKey|dayIdx': text }
   checkin:DB.get('checkin',{last:null}), // weekly check-in tracking
-  activities:DB.get('activities',{}) // { date: [ {type, mins, dist, kcal} ] }  cardio / sport
+  activities:DB.get('activities',{}), // { date: [ {type, mins, dist, kcal} ] }  cardio / sport
+  sessions:DB.get('sessions',{})     // { date: circuitKey }  which circuit trained that day (flexible days)
 };
 const MEAL_SPLIT={breakfast:0.25,lunch:0.30,dinner:0.30,snack:0.15};
 // cardio / sport activities (MET = calories factor)
@@ -694,13 +698,20 @@ function saveGoal(){ const v=parseInt(document.getElementById('goalInput').value
   state.goal=v; DB.set('goal',v); closeEx(); renderDash(); toast('Goal updated'); }
 function renderStepWeek(){
   const el=document.getElementById('stepWeek'); if(!el) return;
-  const mon=new Date(weekKey()+'T00:00:00'), tkey=todayKey(); let cells='';
+  const mon=new Date(weekKey()+'T00:00:00'), tkey=todayKey(); let cells='', total=0, elapsed=0;
   for(let i=0;i<7;i++){ const d=new Date(mon); d.setDate(mon.getDate()+i); const k=ymd(d);
     const v=state.steps[k]||0, hit=v>=state.goal, some=v>0&&!hit, future=k>tkey;
+    total+=v; if(k<=tkey) elapsed++;
     const cls=hit?'on':(some?'train':'');
     const dot=hit?CHK:(some?`<span class="skm">${(v/1000).toFixed(v<10000?1:0)}k</span>`:(future?'<span style="color:var(--border-2)">·</span>':'<span style="color:var(--muted)">–</span>'));
     cells+=`<div class="wd ${cls}" title="${DAYS[i]} ${ddmm(k)} · ${fmt(v)} steps${hit?' · goal hit ✓':''}">${DAYS[i][0]}<div class="dot">${dot}</div></div>`; }
-  el.innerHTML=`<div class="swklabel">This week's steps</div><div class="weekrow">${cells}</div>`;
+  const wkTarget=state.goal*7, pct=Math.min(total/wkTarget*100,100), avg=elapsed?Math.round(total/elapsed):0;
+  const onTrack=total>=state.goal*elapsed;
+  el.innerHTML=`<div class="swklabel">This week's steps</div>
+    <div class="swtot"><span><b>${fmt(total)}</b> / ${fmt(wkTarget)}</span><span class="swavg" style="${onTrack?'color:var(--accent-2)':'color:var(--muted)'}">avg ${fmt(avg)}/day</span></div>
+    <div class="mbar" style="height:8px;margin:8px 0 12px"><div class="mfill" style="width:${pct}%;background:${onTrack?'var(--grad)':'linear-gradient(135deg,#cf983b,#b9852f)'}"></div></div>
+    <div class="weekrow">${cells}</div>
+    <p class="muted" style="margin-top:9px;font-size:11.5px">Weekly target ${fmt(wkTarget)} — a big day can make up for a quiet one.</p>`;
 }
 function calcStreak(){ let s=0; const d=new Date();
   if((state.steps[todayKey()]||0)<state.goal) d.setDate(d.getDate()-1);
@@ -750,24 +761,28 @@ function renderDash(){
   document.getElementById('streak').textContent=calcStreak();
   document.getElementById('ringFg').style.strokeDashoffset=(2*Math.PI*52)*(1-pct);
   renderStepWeek();
-  const i=dayIdx(), focus=state.plan[i], wk=state.planDone[weekKey()]||{}, key=routineKeyForDay(focus);
+  const wk=state.planDone[weekKey()]||{}, td=todayKey(), i=dayIdx();
+  const target=state.plan.filter(routineKeyForDay).length||3, doneCount=Object.values(wk).filter(Boolean).length;
+  const trainedToday=!!wk[i], nk=nextCircuit(), r=ROUTINES[nk], didK=state.sessions[td];
   const hero=document.getElementById('heroToday');
-  if(!focus||focus.toLowerCase()==='rest'){
-    hero.innerHTML=`<div class="hero rest"><div class="elabel">Today · Rest day</div><div class="etitle">Recovery day</div><div class="esub">Rest is when your body adapts and gets stronger. Get a walk in and some sleep.</div></div>`;
+  if(trainedToday){
+    hero.innerHTML=`<div class="hero"><div class="elabel">Trained today ✓ · ${doneCount}/${target} this week</div>
+      <div class="etitle">${didK?ROUTINES[didK].title+' done':'Session done'}</div>
+      <div class="esub">Nice work 💪 Fancy another, or take it easy.</div>
+      <div class="erow"><button class="btn" onclick="openTimerSetup('${nk}')"><span class="pbtn">${PLAY}Do ${r.title}</span></button>
+      <button class="btn-2" style="flex:none" onclick="nav('plan')">All circuits</button></div></div>`;
   } else {
-    const r=key?ROUTINES[key]:null;
-    hero.innerHTML=`<div class="hero"><div class="elabel">Today's session${wk[i]?' · Complete ✓':''}</div>
-      <div class="etitle">${r?r.title+' · '+r.sub:focus}</div>
-      <div class="esub">${r?r.tag+' · '+r.ex.length+' exercises':''}</div>
-      <div class="erow">${key?`<button class="btn" onclick="openTimerSetup('${key}')"><span class="pbtn">${PLAY}${wk[i]?'Train again':'Start workout'}</span></button>`:''}
-      <button class="donebtn ${wk[i]?'on':''}" style="flex:none;width:56px" onclick="togglePlan(${i})">${wk[i]?CHK:''}</button></div></div>`;
+    hero.innerHTML=`<div class="hero"><div class="elabel">Train when you can · ${doneCount}/${target} this week</div>
+      <div class="etitle">Up next: ${r.title}</div>
+      <div class="esub">${r.tag} · ${r.ex.length} exercises · full body</div>
+      <div class="erow"><button class="btn" onclick="openTimerSetup('${nk}')"><span class="pbtn">${PLAY}Start ${r.title}</span></button>
+      <button class="donebtn" style="flex:none;width:56px" onclick="markDone('${nk}')" title="Mark done"></button></div></div>`;
   }
   document.getElementById('weekGlance').innerHTML=DAYS.map((d,idx)=>{
-    const train=!!routineKeyForDay(state.plan[idx]); const done=wk[idx];
-    return `<div class="wd ${done?'on':(train?'train':'')}">${d}<div class="dot">${done?CHK:(train?'<span style="color:var(--muted)">•</span>':'<span style="color:var(--border-2)">·</span>')}</div></div>`;
+    const done=wk[idx], isToday=idx===i;
+    return `<div class="wd ${done?'on':''}" ${isToday?'style="outline:1.5px solid var(--accent);outline-offset:-2px"':''}>${d}<div class="dot">${done?CHK:'<span style="color:var(--border-2)">·</span>'}</div></div>`;
   }).join('');
-  const trainDays=state.plan.filter(routineKeyForDay).length, done=Object.values(wk).filter(Boolean).length;
-  document.getElementById('weekSummary').innerHTML=`<b>${done}/${trainDays}</b> sessions this week · <b>${calcStreak()}</b> day step streak`;
+  document.getElementById('weekSummary').innerHTML=`<b>${doneCount}/${target}</b> sessions this week (any days) · <b>${calcStreak()}</b> day step streak`;
   renderSnapshot();
   renderAlerts();
   renderCheckin();
@@ -820,12 +835,17 @@ function buildAlerts(){
   }
   const st=state.steps[todayKey()]||0;
   if(h>=17 && st<state.goal*0.7) A.push({i:'👟',t:`${fmt(Math.max(state.goal-st,0))} steps to your goal — fit a walk in.`,go:"nav('dash')"});
-  const di=dayIdx(), key=routineKeyForDay(state.plan[di]), wk=state.planDone[weekKey()]||{};
-  if(key && !wk[di] && h>=17) A.push({i:'🏋️',t:`Today's ${ROUTINES[key].title} isn't done yet — even a quick one counts.`,go:`openTimerSetup('${key}')`});
+  const di=dayIdx(), wk=state.planDone[weekKey()]||{};
+  const target=state.plan.filter(routineKeyForDay).length||3, doneWk=Object.values(wk).filter(Boolean).length, dow=(new Date().getDay()+6)%7;
+  // weekly training nudge — flexible days: only if you're behind pace late in the week
+  if(!wk[di] && doneWk<target && dow>=3 && h>=15){
+    const left=target-doneWk;
+    A.push({i:'🏋️',t:`${left} more session${left>1?'s':''} to hit ${target} this week — grab one when you can.`,go:"nav('plan')"});
+  }
   // missed-log nudges
   if(h>=19 && macrosOf(foodToday()).kcal<=0) A.push({i:'🍽️',t:`You haven't logged any food today — quick add it before bed so your streak stays alive.`,go:"nav('food')"});
   const sd=sessionDates(), lastSess=Object.keys(sd).sort().reverse()[0];
-  if(daysSince(lastSess)>=4 && !key) A.push({i:'💤',t:`It's been ${daysSince(lastSess)} days since your last workout — let's get one in.`,go:"nav('plan')"});
+  if(daysSince(lastSess)>=5) A.push({i:'💤',t:`It's been ${daysSince(lastSess)} days since your last workout — let's get one in.`,go:"nav('plan')"});
   // planned cardio not logged yet
   const plannedAct=(ACT_PLAN[di]||[]).filter(t=>!activitiesOn(todayKey()).some(a=>a.type===t));
   if(h>=16 && plannedAct.length) A.push({i:plannedAct[0]==='Run'?'🏃':(plannedAct[0]==='Soccer'?'⚽':'🔥'),t:`Today's ${plannedAct.join(' & ')} ${plannedAct.length>1?'aren’t':'isn’t'} logged yet — tap to add it.`,go:"nav('dash')"});
@@ -989,6 +1009,17 @@ function renderDashFood(){
 }
 function togglePlan(i){ const wkk=weekKey(); state.planDone[wkk]=state.planDone[wkk]||{}; state.planDone[wkk][i]=!state.planDone[wkk][i];
   DB.set('planDone',state.planDone); renderDash(); renderRoutines(); toast(state.planDone[wkk][i]?'Session complete 💪':'Unchecked'); }
+function nextCircuit(){ const keys=Object.keys(ROUTINES);
+  const dates=Object.keys(state.sessions).sort();
+  if(dates.length){ const last=state.sessions[dates[dates.length-1]], idx=keys.indexOf(last); if(idx>=0) return keys[(idx+1)%keys.length]; }
+  return keys[0]; }
+function markDone(k){
+  const wkk=weekKey(), td=todayKey(), di=dayIdx();
+  state.planDone[wkk]=state.planDone[wkk]||{};
+  if(state.sessions[td]===k){ delete state.sessions[td]; state.planDone[wkk][di]=false; }
+  else { state.sessions[td]=k; state.planDone[wkk][di]=true; }
+  DB.set('sessions',state.sessions); DB.set('planDone',state.planDone);
+  renderDash(); renderRoutines(); toast(state.sessions[td]===k?ROUTINES[k].title+' done 💪':'Unchecked'); }
 
 /* ---------- program + logging ---------- */
 function liftFor(name,wk){ const w=state.lifts[wk]; return (w&&w[name])||null; }
@@ -1013,7 +1044,7 @@ function renderRoutines(){
   const box=document.getElementById('routineList'); if(!box) return;
   const wk=state.planDone[weekKey()]||{};
   box.innerHTML=Object.keys(ROUTINES).map(k=>{
-    const r=ROUTINES[k], di=dayForCircuit(k), doneToday=wk[di];
+    const r=ROUTINES[k], di=dayForCircuit(k), doneToday=state.sessions[todayKey()]===k;
     const note=di>=0?(state.notes[weekKey()+'|'+di]||''):'';
     let lastGrp=null;
     const exHtml=r.ex.map(x=>{
@@ -1040,12 +1071,12 @@ function renderRoutines(){
     }).join('');
     return `<div class="routine">
       <div class="rh"><span class="rt">${r.title}</span><span class="rtag">${r.tag}</span></div>
-      <div class="rmeta">${r.sub} · ${r.ex.length} exercises${di>=0?' · '+DAYS[di]:''}</div>
+      <div class="rmeta">${r.sub} · ${r.ex.length} exercises · train any day</div>
       ${exHtml}
       ${note?`<div class="sessnote" onclick="openNote(${di})">📝 ${note}</div>`:''}
       <div class="rbtns">
         <button class="btn" onclick="openTimerSetup('${k}')"><span class="pbtn">${PLAY}Start timer</span></button>
-        <button class="donebtn ${doneToday?'on':''}" onclick="togglePlan(${di})">${doneToday?CHK+' Done':'Mark done'}</button>
+        <button class="donebtn ${doneToday?'on':''}" onclick="markDone('${k}')">${doneToday?CHK+' Done today':'Mark done'}</button>
       </div>
       ${di>=0?`<button class="notebtn" onclick="openNote(${di})">${note?'Edit note':'＋ Add session note'}</button>`:''}
       </div>`;
@@ -1209,7 +1240,7 @@ function renderMeasure(){
 }
 
 /* ---------- backup & restore ---------- */
-const DATA_KEYS=['goal','steps','plan','planDone','lifts','bw','food','foods','foodGoal','profile','water','waterGoal','measure','timer','meals','swaps','notes','checkin','activities'];
+const DATA_KEYS=['goal','steps','plan','planDone','lifts','bw','food','foods','foodGoal','profile','water','waterGoal','measure','timer','meals','swaps','notes','checkin','activities','sessions'];
 function exportData(){
   const data={_app:'Niall Gym Programme',_exported:new Date().toISOString()};
   DATA_KEYS.forEach(k=>{ const v=localStorage.getItem('ft_'+k); if(v!=null){ try{ data[k]=JSON.parse(v); }catch(e){} } });
