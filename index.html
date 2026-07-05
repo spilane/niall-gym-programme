@@ -265,6 +265,9 @@
   .sessnote{margin-top:10px;font-size:13px;color:var(--text-2);background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:9px 12px;cursor:pointer;line-height:1.45}
   .notebtn{margin-top:10px;width:100%;background:none;border:1px dashed var(--border-2);color:var(--text-2);font-weight:700;font-size:12.5px;border-radius:9px;padding:8px 0;cursor:pointer}
   .notebtn:active{opacity:.6}
+  .failbtn{margin-top:9px;width:100%;background:none;border:1px dashed var(--border-2);color:var(--muted);font-weight:700;font-size:12px;border-radius:9px;padding:8px 0;cursor:pointer}
+  .failbtn.on{background:rgba(194,85,78,.1);border:1px solid var(--rose);color:var(--rose)}
+  .failbtn:active{opacity:.6}
   .hrow{display:flex;align-items:center;gap:8px;margin-bottom:4px}
   .hwk{width:38px;font-size:10px;color:var(--muted);font-weight:700;text-align:right;flex-shrink:0}
   .hcells{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;flex:1}
@@ -580,7 +583,7 @@ const ROUTINES={
     {n:'Chin-Ups (underhand)',rep:'6-10',repN:8,unit:'reps',sets:3,grp:'Superset 1',tgt:'Lats, biceps',vid:''},
     {n:'Chest-Supported DB Rear Delt Fly',rep:'12-15',repN:13,unit:'kg',sets:3,grp:'Superset 1',tgt:'Rear delt',vid:'EA7u4Q_8HQ0'},
     {n:'Cable Pull-Through',rep:'12-15',repN:13,unit:'kg',sets:3,grp:'Superset 2',tgt:'Hamstrings, glutes',vid:''},
-    {n:'Rope Triceps Pushdown',rep:'12-15',repN:13,unit:'kg',sets:3,grp:'Superset 2',tgt:'Triceps (lateral + medial)',vid:'WUu0oK5j7Hk'},
+    {n:'DB Lateral Raise',rep:'12-15',repN:13,unit:'kg',sets:3,grp:'Superset 2',tgt:'Side delt',vid:'3VcKaXpzqRo'},
     {n:'DB Romanian Deadlift',rep:'12',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Hamstrings, glutes',vid:'7AaaytTpRiA'},
     {n:'DB Floor Press',rep:'12',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Chest (mid/lower)',vid:''},
     {n:'DB High Pull',rep:'12',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Upper back, delts',vid:''},
@@ -1027,9 +1030,14 @@ function liftFor(name,wk){ const w=state.lifts[wk]; return (w&&w[name])||null; }
 function hasValues(e){ return e && e.s && e.s.some(v=>v>0); }
 function lastLift(name){
   const weeks=Object.keys(state.lifts).filter(w=>w!==weekKey()).sort().reverse();
-  for(const w of weeks){ const e=state.lifts[w]&&state.lifts[w][name]; if(hasValues(e)) return {s:e.s.slice(),week:w}; }
+  for(const w of weeks){ const e=state.lifts[w]&&state.lifts[w][name]; if(hasValues(e)) return {s:e.s.slice(),week:w,f:!!e.f}; }
   return null;
 }
+function markFail(name){
+  const wk=weekKey(); state.lifts[wk]=state.lifts[wk]||{};
+  const o=state.lifts[wk][name]||{s:[0,0,0]}; if(!o.s) o.s=[0,0,0];
+  o.f=!o.f; state.lifts[wk][name]=o; DB.set('lifts',state.lifts); renderRoutines();
+  toast(o.f?'Failure logged — you\'ll see it here next week':'Failure unmarked'); }
 function saveSet(name,idx,val){
   const wk=weekKey(); state.lifts[wk]=state.lifts[wk]||{};
   const o=state.lifts[wk][name]||{s:[0,0,0]}; if(!o.s) o.s=[0,0,0];
@@ -1058,7 +1066,7 @@ function renderRoutines(){
       const lastTxt = le ? le.s.map(v=>v||'–').join(' · ')+' '+u : '—';
       const top = le ? Math.max(0,...le.s) : 0;
       const prog = (e.unit==='kg' && top>0) ? `<div class="progtip">↑ Hit the top of the range on every set? Add 1–2 kg next time.</div>` : '';
-      const canSwap=!!ALTS[x.n];
+      const canSwap=!!ALTS[x.n], failed=!!cur.f;
       return `${grpHdr}<div class="pex">
         <div class="pexhead">
           <div onclick="openDemo('${e.vid}','${esc(e.n)}')"><div class="rn">${e.n}${swapped?' <span class="swaptag">swapped</span>':''}</div><div class="rs">${nsets} × ${e.rep}${e.unit==='sec'?' sec':''} · ${e.tgt}</div></div>
@@ -1066,8 +1074,9 @@ function renderRoutines(){
             ${canSwap?`<button class="swapbtn" onclick="openSwap('${k}','${esc(x.n)}')" title="Swap exercise"><svg viewBox="0 0 24 24"><path d="M7 4 3 8l4 4M3 8h13M17 20l4-4-4-4M21 16H8"/></svg></button>`:''}
             <div class="rd" onclick="openDemo('${e.vid}','${esc(e.n)}')">${PLAY}demo</div></div></div>
         <div class="setgrid">${inputs}<div class="setunit">${u}</div></div>
-        <div class="lastline ${le?'':'none'}" ${le?`onclick="fillLast('${esc(e.n)}')"`:''}><span class="ll">Last week</span><span>${lastTxt}</span></div>
+        <div class="lastline ${le?'':'none'}" ${le?`onclick="fillLast('${esc(e.n)}')"`:''}><span class="ll">Last week</span><span>${lastTxt}${le&&le.f?' · <b style="color:var(--rose)">⚠ hit failure</b>':''}</span></div>
         ${prog}
+        <button class="failbtn ${failed?'on':''}" onclick="markFail('${esc(e.n)}')">${failed?'🚩 Marked as failure this week':'🚩 Mark if you hit failure'}</button>
       </div>`;
     }).join('');
     return `<div class="routine">
