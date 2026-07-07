@@ -415,11 +415,15 @@
       <canvas id="waterChart" height="170"></canvas></div>
     <div class="card"><div class="ctitle"><h2>Bodyweight</h2></div>
       <div style="display:flex;gap:10px">
-        <input type="number" id="bwInput" placeholder="Log weight (kg)" inputmode="decimal" step="0.1">
+        <input type="number" id="bwInput" placeholder="Weight (kg)" inputmode="decimal" step="0.1">
+        <input type="date" id="bwDate" style="max-width:150px">
         <button class="btn" onclick="saveBW()">Log</button>
       </div>
+      <p class="muted" style="margin-top:8px;font-size:11.5px">Date defaults to today — change it to log a missed day.</p>
       <canvas id="bwChart" height="180" style="margin-top:16px"></canvas></div>
-    <div class="card"><div class="ctitle"><h2>Measurements</h2><span class="sub">cm · log anytime</span></div>
+    <div class="card"><div class="ctitle"><h2>Measurements</h2><span class="sub">cm · any day</span></div>
+      <label>Date (change it to back-log a missed day)</label>
+      <input type="date" id="mDate" style="margin-bottom:12px">
       <div class="grid3">
         <div><label>Waist</label><input type="number" id="mWaist" inputmode="decimal" step="0.1"></div>
         <div><label>Chest</label><input type="number" id="mChest" inputmode="decimal" step="0.1"></div>
@@ -1130,7 +1134,9 @@ function delNote(di){ delete state.notes[weekKey()+'|'+di]; DB.set('notes',state
 /* ---------- bodyweight ---------- */
 function saveBW(){ const v=parseFloat(document.getElementById('bwInput').value);
   if(isNaN(v)||v<=0){ toast('Enter weight'); return; }
-  state.bw[todayKey()]=v; DB.set('bw',state.bw); document.getElementById('bwInput').value=''; drawCharts(); toast('Weight logged'); }
+  const dEl=document.getElementById('bwDate'), k=(dEl&&dEl.value&&dEl.value<=todayKey())?dEl.value:todayKey();
+  state.bw[k]=v; DB.set('bw',state.bw); document.getElementById('bwInput').value=''; drawCharts(); renderDash();
+  toast('Weight logged'+(k!==todayKey()?' for '+ddmm(k):'')); }
 
 /* ---------- water ---------- */
 function waterAdd(ml){ const k=todayKey(); state.water[k]=Math.max(0,(state.water[k]||0)+ml); DB.set('water',state.water); renderWater(); }
@@ -1220,11 +1226,12 @@ function saveMeasure(){
   const g=id=>{ const v=parseFloat(document.getElementById(id).value); return isNaN(v)?null:v; };
   const m={waist:g('mWaist'),chest:g('mChest'),arms:g('mArms'),hips:g('mHips'),thigh:g('mThigh')};
   if(Object.values(m).every(v=>v==null)){ toast('Enter at least one measurement'); return; }
-  const prev=state.measure[todayKey()]||{};
-  state.measure[todayKey()]=Object.assign({},prev,Object.fromEntries(Object.entries(m).filter(([,v])=>v!=null)));
+  const dEl=document.getElementById('mDate'), k=(dEl&&dEl.value&&dEl.value<=todayKey())?dEl.value:todayKey();
+  const prev=state.measure[k]||{};
+  state.measure[k]=Object.assign({},prev,Object.fromEntries(Object.entries(m).filter(([,v])=>v!=null)));
   DB.set('measure',state.measure);
   ['mWaist','mChest','mArms','mHips','mThigh'].forEach(i=>document.getElementById(i).value='');
-  renderMeasure(); toast('Measurements saved');
+  renderMeasure(); toast('Measurements saved'+(k!==todayKey()?' for '+ddmm(k):''));
 }
 function renderMeasure(){
   const el=document.getElementById('measureList'); if(!el) return;
@@ -1848,6 +1855,7 @@ function histTap(ws,di,k){ const note=state.notes[ws+'|'+di], acts=k?activitiesO
   toast(bits.length?bits.join(' · '):(DAYS[di]+' '+(ddmm(ws)))); }
 function drawCharts(){
   renderProgressStats(); renderPBs(); renderMeasure(); renderHistory();
+  ['bwDate','mDate'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.max=todayKey(); if(!el.value) el.value=todayKey(); } });
   const cd=lastNDates(14), Tg=calcTargets().kcal;
   const cal=cd.map(d=>Math.round(macrosOf(foodOn(d)).kcal));
   mkChart('calChart',{type:'bar',data:{labels:cd.map(d=>ddmm(d)),
