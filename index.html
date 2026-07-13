@@ -559,7 +559,7 @@ const ROUNDS_TIP='Each day is full body: do the main lift on its own first, then
 const SETS=3; // default sets per exercise (overridden per-exercise)
 const ROUTINES={
   A:{title:'Full Body A',sub:'Full Body',tag:'Bench anchor',ex:[
-    {n:'Barbell Bench Press',rep:'6-8',repN:7,unit:'kg',sets:4,grp:'Strength',tgt:'Chest (mid), front delt',vid:'rT7DgCr-3pg'},
+    {n:'DB Bench Press',rep:'8-12',repN:10,unit:'kg',sets:3,grp:'Strength',tgt:'Chest (mid), front delt, triceps',vid:'AuNRCrdhquE'},
     {n:'Pull-Ups (neutral grip)',rep:'6-10',repN:8,unit:'reps',sets:3,grp:'Superset 1',tgt:'Lats (width)',vid:''},
     {n:'DB Lateral Raise',rep:'12-15',repN:13,unit:'kg',sets:3,grp:'Superset 1',tgt:'Side delt',vid:'3VcKaXpzqRo'},
     {n:'DB Single-Leg RDL',rep:'8/side',repN:8,unit:'kg',sets:3,grp:'Superset 2',tgt:'Hamstrings, glutes',vid:'7AaaytTpRiA'},
@@ -571,8 +571,8 @@ const ROUTINES={
     {n:'DB Russian Twist',rep:'20',repN:20,unit:'reps',sets:3,grp:'Finisher',tgt:'Core (obliques)',vid:'s0kT80JLCfA'},
     {n:'Band Pallof Press',rep:'10/side',repN:10,unit:'reps',sets:2,grp:'Core',tgt:'Core (anti-rotation)',vid:''}]},
   B:{title:'Full Body B',sub:'Full Body',tag:'Leg Curl anchor',ex:[
-    {n:'Standing Cable Leg Curl',rep:'10-12/side',repN:11,unit:'kg',sets:4,grp:'Strength',tgt:'Hamstrings',vid:''},
-    {n:'Incline DB Press',rep:'8-10',repN:9,unit:'kg',sets:3,grp:'Superset 1',tgt:'Chest (upper)',vid:''},
+    {n:'Standing Cable Leg Curl',rep:'10-12/side',repN:11,unit:'kg',sets:3,grp:'Strength',tgt:'Hamstrings',vid:''},
+    {n:'DB Chest Fly',rep:'12-15',repN:13,unit:'kg',sets:3,grp:'Superset 1',tgt:'Chest (stretch)',vid:''},
     {n:'Cable Face Pull',rep:'15',repN:15,unit:'kg',sets:3,grp:'Superset 1',tgt:'Rear delt, upper back',vid:'eTCBSFlCJ_s'},
     {n:'Seated Cable Row',rep:'10-12',repN:11,unit:'kg',sets:3,grp:'Superset 2',tgt:'Mid-back (thickness)',vid:'EU7bOadUsNI'},
     {n:'Incline DB Curl',rep:'10-12',repN:11,unit:'kg',sets:3,grp:'Superset 2',tgt:'Biceps (long head)',vid:''},
@@ -583,7 +583,7 @@ const ROUTINES={
     {n:'DB Calf Raise',rep:'15',repN:15,unit:'kg',sets:3,grp:'Finisher',tgt:'Calves',vid:''},
     {n:'Lying Leg Raise / Reverse Crunch',rep:'12-15',repN:13,unit:'reps',sets:2,grp:'Core',tgt:'Lower abs',vid:''}]},
   C:{title:'Full Body C',sub:'Full Body',tag:'Incline anchor',ex:[
-    {n:'Barbell Incline Bench Press',rep:'6-8',repN:7,unit:'kg',sets:4,grp:'Strength',tgt:'Chest (upper), front delt',vid:''},
+    {n:'Incline DB Press',rep:'8-12',repN:10,unit:'kg',sets:3,grp:'Strength',tgt:'Chest (upper), front delt',vid:''},
     {n:'Chin-Ups (underhand)',rep:'6-10',repN:8,unit:'reps',sets:3,grp:'Superset 1',tgt:'Lats, biceps',vid:''},
     {n:'Chest-Supported DB Rear Delt Fly',rep:'12-15',repN:13,unit:'kg',sets:3,grp:'Superset 1',tgt:'Rear delt',vid:'EA7u4Q_8HQ0'},
     {n:'Cable Pull-Through',rep:'12-15',repN:13,unit:'kg',sets:3,grp:'Superset 2',tgt:'Hamstrings, glutes',vid:''},
@@ -596,7 +596,7 @@ const ROUTINES={
     {n:'Dead Bug',rep:'8/side',repN:8,unit:'reps',sets:2,grp:'Core',tgt:'Core (anti-extension)',vid:'g_BYB0R-4Ws'}]}
 };
 const GRP_NOTE={
-  'Strength':'On its own · 4 sets · rest ~2 min',
+  'Strength':'Your main lift — on its own · 3 sets · rest ~90s',
   'Superset 1':'Superset · 3 rounds · both moves back-to-back, rest ~60s',
   'Superset 2':'Superset · 3 rounds · both moves back-to-back, rest ~60s',
   'Finisher':'One light DB · all moves back-to-back · 2–3 rounds',
@@ -1303,7 +1303,7 @@ function calcTargets(){
 function stepRecommend(goal){ return goal==='lose'?10000:8000; }
 
 /* ---------- warm-up & cool-down ---------- */
-const WARMUP=['3–4 min easy cardio — bike, row, brisk walk or skips','Cat-cow — 8 reps','World’s greatest stretch — 5 each side','Band pull-aparts — 15 reps','Glute bridges — 15 reps (fire the glutes first so your back doesn’t take over)','Ramp-up: before your first barbell set, do 2 lighter sets (~50% then ~75%)'];
+const WARMUP=['3–4 min easy cardio — bike, row, brisk walk or skips','Cat-cow — 8 reps','World’s greatest stretch — 5 each side','Band pull-aparts — 15 reps','Glute bridges — 15 reps (fire the glutes first so your back doesn’t take over)','Ramp-up: before your first working set of the day’s main lift, do 2 lighter sets (~50% then ~75%)'];
 const COOLDOWN=['Easy walk — 2–3 min to bring the heart rate down','Child’s pose — 45 sec','Standing hamstring stretch — 30 sec each','Chest / doorway stretch — 30 sec','Back-care “big 3” (most days): curl-up 30s · side plank 30s/side · bird dog — 2–3 easy rounds'];
 function openWarmup(type){
   const cool=type==='cool', list=cool?COOLDOWN:WARMUP;
