@@ -555,51 +555,50 @@ function activitiesOn(d){ return state.activities[d]||[]; }
 function activitiesKcal(d){ return activitiesOn(d).reduce((s,a)=>s+(a.kcal||0),0); }
 function defaultPlan(){ return ['Full Body Circuit A','Rest','Full Body Circuit B','Rest','Full Body Circuit C','Rest','Rest']; }
 
-const ROUNDS_TIP='Each day is full body: do the main lift on its own first, then the supersets (both moves back-to-back), then the one-dumbbell finisher. Stop 1–2 reps short of failure on working sets; push the last finisher round. Log your weights as you go.';
+const ROUNDS_TIP='Each day is full body: do the main lift on its own first, then the supersets (both moves back-to-back), then the mixed finisher. Stop 1–2 reps short of failure on working sets; push the last finisher round. Log your weights as you go.';
 const SETS=3; // default sets per exercise (overridden per-exercise)
 const ROUTINES={
   A:{title:'Full Body A',sub:'Full Body',tag:'Bench anchor',ex:[
-    {n:'DB Bench Press',rep:'10',repN:10,unit:'kg',sets:3,grp:'Strength',tgt:'Chest (mid), front delt, triceps',vid:'AuNRCrdhquE'},
+    {n:'Barbell Bench Press',rep:'10',repN:10,unit:'kg',sets:3,grp:'Strength',tgt:'Chest (mid), front delt, triceps',vid:'rT7DgCr-3pg'},
     {n:'Pull-Ups (neutral grip)',rep:'8',repN:8,unit:'reps',sets:3,grp:'Superset 1',tgt:'Lats (width)',vid:''},
     {n:'DB Lateral Raise',rep:'12',repN:13,unit:'kg',sets:3,grp:'Superset 1',tgt:'Side delt',vid:'3VcKaXpzqRo'},
     {n:'DB Single-Leg RDL',rep:'8/side',repN:8,unit:'kg',sets:3,grp:'Superset 2',tgt:'Hamstrings, glutes',vid:'7AaaytTpRiA'},
     {n:'Cable Overhead Triceps Ext',rep:'10',repN:11,unit:'kg',sets:3,grp:'Superset 2',tgt:'Triceps (long head)',vid:'-Vyt7Db6tPw'},
-    {n:'DB Step-Up',rep:'12/side',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Quads, glutes (knee-height step)',vid:'WCFCdxzFBa4'},
-    {n:'DB Squeeze Press',rep:'12',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Chest (inner)',vid:''},
-    {n:'Chest-Supported DB Row',rep:'12',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Back (chest on incline bench)',vid:'tCM6BHr8wMg'},
+    {n:'DB Reverse Lunge',rep:'12/side',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Quads, glutes',vid:'RZKXLMxPF_I'},
+    {n:'Seated DB Shoulder Press',rep:'12',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Shoulders (back supported)',vid:'qEwKCR5JCog'},
+    {n:'Lat Pulldown',rep:'12',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Lats (seated, back supported)',vid:'CAwf7n6Luuc'},
     {n:'Cable Curl',rep:'12',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Biceps',vid:'NFzTWp2qpiE'},
     {n:'DB Russian Twist',rep:'20',repN:20,unit:'reps',sets:3,grp:'Finisher',tgt:'Core (obliques)',vid:'s0kT80JLCfA'},
     {n:'Hanging Knee Raise',rep:'12',repN:12,unit:'reps',sets:2,grp:'Core',tgt:'Lower abs',vid:'hdng3Nm1x_E'}]},
   B:{title:'Full Body B',sub:'Full Body',tag:'Leg Curl anchor',ex:[
     {n:'Standing Cable Leg Curl',rep:'10/side',repN:11,unit:'kg',sets:3,grp:'Strength',tgt:'Hamstrings',vid:''},
-    {n:'DB Chest Fly',rep:'12',repN:13,unit:'kg',sets:3,grp:'Superset 1',tgt:'Chest (stretch)',vid:''},
+    {n:'Single-Arm Cable Chest Press',rep:'12',repN:12,unit:'kg',sets:3,grp:'Superset 1',tgt:'Chest',vid:''},
     {n:'Cable Face Pull',rep:'15',repN:15,unit:'kg',sets:3,grp:'Superset 1',tgt:'Rear delt, upper back',vid:'eTCBSFlCJ_s'},
     {n:'Seated Cable Row',rep:'10',repN:11,unit:'kg',sets:3,grp:'Superset 2',tgt:'Mid-back (thickness)',vid:'EU7bOadUsNI'},
     {n:'Incline DB Curl',rep:'10',repN:11,unit:'kg',sets:3,grp:'Superset 2',tgt:'Biceps (long head)',vid:''},
-    {n:'DB Reverse Lunge',rep:'12/side',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Quads, glutes',vid:'RZKXLMxPF_I'},
-    {n:'Seated DB Shoulder Press',rep:'12',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Shoulders (back supported)',vid:'qEwKCR5JCog'},
+    {n:'Barbell Hip Thrust',rep:'12',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Glutes (heavy, ribs down)',vid:'LM8XHLYJoYs'},
+    {n:'Landmine Press',rep:'10/side',repN:10,unit:'kg',sets:3,grp:'Finisher',tgt:'Shoulders, upper chest',vid:''},
     {n:'Cable Pullover',rep:'12',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Lats (top pulley)',vid:'G9uNaXGTJ4w'},
-    {n:'Barbell Curl',rep:'12',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Biceps (2.5kg jumps)',vid:'kwG2ipFRgfo'},
+    {n:'Seated DB Hammer Curl',rep:'12',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Biceps, brachialis',vid:'zC3nLlEvin4'},
     {n:'DB Calf Raise',rep:'15',repN:15,unit:'kg',sets:3,grp:'Finisher',tgt:'Calves',vid:''},
     {n:'Lying Leg Raise / Reverse Crunch',rep:'12',repN:13,unit:'reps',sets:2,grp:'Core',tgt:'Lower abs',vid:''}]},
   C:{title:'Full Body C',sub:'Full Body',tag:'Incline anchor',ex:[
-    {n:'Incline DB Press',rep:'10',repN:10,unit:'kg',sets:3,grp:'Strength',tgt:'Chest (upper), front delt',vid:''},
+    {n:'Barbell Incline Bench Press',rep:'10',repN:10,unit:'kg',sets:3,grp:'Strength',tgt:'Chest (upper), front delt',vid:''},
     {n:'Chin-Ups (underhand)',rep:'8',repN:8,unit:'reps',sets:3,grp:'Superset 1',tgt:'Lats, biceps',vid:''},
     {n:'Chest-Supported DB Rear Delt Fly',rep:'12',repN:13,unit:'kg',sets:3,grp:'Superset 1',tgt:'Rear delt',vid:'EA7u4Q_8HQ0'},
     {n:'Cable Glute Kickback',rep:'12/side',repN:12,unit:'kg',sets:3,grp:'Superset 2',tgt:'Glutes (hip extension)',vid:'SqM9Mvfab4w'},
     {n:'Cable Lateral Raise',rep:'12',repN:13,unit:'kg',sets:3,grp:'Superset 2',tgt:'Side delt',vid:''},
     {n:'DB Romanian Deadlift',rep:'12',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Hamstrings, glutes',vid:'7AaaytTpRiA'},
-    {n:'DB Floor Press',rep:'12',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Chest (mid/lower)',vid:''},
+    {n:'Weighted Dips',rep:'10',repN:10,unit:'kg',sets:3,grp:'Finisher',tgt:'Chest, triceps (lean forward for chest)',vid:'2z8JmcrW-As'},
     {n:'Single-Arm Cable Row',rep:'12/side',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Mid-back (brace free hand on bench)',vid:''},
     {n:'Cable Rope Pushdown',rep:'12',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Triceps',vid:'WUu0oK5j7Hk'},
-    {n:'Bicycle Crunch',rep:'20',repN:20,unit:'reps',sets:3,grp:'Finisher',tgt:'Abs, obliques',vid:'9FGilxCbdz8'},
-    {n:'Dead Bug',rep:'8/side',repN:8,unit:'reps',sets:2,grp:'Core',tgt:'Core (anti-extension)',vid:'g_BYB0R-4Ws'}]}
+    {n:'Dead Bug',rep:'8/side',repN:8,unit:'reps',sets:3,grp:'Finisher',tgt:'Core (anti-extension, back-friendly)',vid:'g_BYB0R-4Ws'}]}
 };
 const GRP_NOTE={
   'Strength':'Your main lift — on its own · 3 sets · rest ~90s',
   'Superset 1':'Superset · 3 rounds · both moves back-to-back, rest ~60s',
   'Superset 2':'Superset · 3 rounds · both moves back-to-back, rest ~60s',
-  'Finisher':'One light DB · all moves back-to-back · 2–3 rounds',
+  'Finisher':'Mixed kit · push hard · short rest as needed · 2–3 rounds',
   'Core':'Slow & controlled · no momentum'
 };
 // quick lookups: exercise name -> {unit, reps} and -> target
