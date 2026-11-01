@@ -553,49 +553,35 @@ function activityKcal(type,mins,dist){ const a=ACTS[type]||ACTS.Other, wt=actWei
   return Math.round(a.met*wt*((mins||0)/60)); }
 function activitiesOn(d){ return state.activities[d]||[]; }
 function activitiesKcal(d){ return activitiesOn(d).reduce((s,a)=>s+(a.kcal||0),0); }
-function defaultPlan(){ return ['Full Body Circuit A','Rest','Full Body Circuit B','Rest','Full Body Circuit C','Rest','Rest']; }
+function defaultPlan(){ return ['Full Body Circuit A','Rest','Rest','Full Body Circuit B','Rest','Rest','Rest']; }
 
-const ROUNDS_TIP='Each day is full body: do the main lift on its own first, then the supersets (both moves back-to-back), then the mixed finisher. Stop 1–2 reps short of failure on working sets; push the last finisher round. Log your weights as you go.';
+const ROUNDS_TIP='Each day is full body: do your two heavy lifts first (each on its own bar), then the supersets (both moves back-to-back), then the mixed finisher. Stop 1–2 reps short of failure on working sets; push the last finisher round. Log your weights as you go.';
 const SETS=3; // default sets per exercise (overridden per-exercise)
 const ROUTINES={
   A:{title:'Full Body A',sub:'Full Body',tag:'Bench anchor',ex:[
-    {n:'Barbell Bench Press',rep:'10',repN:10,unit:'kg',sets:3,grp:'Strength',tgt:'Chest (mid), front delt, triceps',vid:'rT7DgCr-3pg'},
-    {n:'Pull-Ups (neutral grip)',rep:'8',repN:8,unit:'reps',sets:3,grp:'Superset 1',tgt:'Lats (width)',vid:''},
-    {n:'DB Lateral Raise',rep:'12',repN:13,unit:'kg',sets:3,grp:'Superset 1',tgt:'Side delt',vid:'3VcKaXpzqRo'},
-    {n:'DB Single-Leg RDL',rep:'8/side',repN:8,unit:'kg',sets:3,grp:'Superset 2',tgt:'Hamstrings, glutes',vid:'7AaaytTpRiA'},
-    {n:'Cable Overhead Triceps Ext',rep:'10',repN:11,unit:'kg',sets:3,grp:'Superset 2',tgt:'Triceps (long head)',vid:'-Vyt7Db6tPw'},
-    {n:'DB Reverse Lunge',rep:'12/side',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Quads, glutes',vid:'RZKXLMxPF_I'},
-    {n:'Seated DB Shoulder Press',rep:'12',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Shoulders (back supported)',vid:'qEwKCR5JCog'},
-    {n:'Lat Pulldown',rep:'12',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Lats (seated, back supported)',vid:'CAwf7n6Luuc'},
-    {n:'Cable Curl',rep:'12',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Biceps',vid:'NFzTWp2qpiE'},
-    {n:'DB Russian Twist',rep:'20',repN:20,unit:'reps',sets:3,grp:'Finisher',tgt:'Core (obliques)',vid:'s0kT80JLCfA'},
-    {n:'Hanging Knee Raise',rep:'12',repN:12,unit:'reps',sets:2,grp:'Core',tgt:'Lower abs',vid:'hdng3Nm1x_E'}]},
-  B:{title:'Full Body B',sub:'Full Body',tag:'Leg Curl anchor',ex:[
-    {n:'Standing Cable Leg Curl',rep:'10/side',repN:11,unit:'kg',sets:3,grp:'Strength',tgt:'Hamstrings',vid:''},
-    {n:'Single-Arm Cable Chest Press',rep:'12',repN:12,unit:'kg',sets:3,grp:'Superset 1',tgt:'Chest',vid:''},
-    {n:'Cable Face Pull',rep:'15',repN:15,unit:'kg',sets:3,grp:'Superset 1',tgt:'Rear delt, upper back',vid:'eTCBSFlCJ_s'},
-    {n:'Seated Cable Row',rep:'10',repN:11,unit:'kg',sets:3,grp:'Superset 2',tgt:'Mid-back (thickness)',vid:'EU7bOadUsNI'},
-    {n:'Incline DB Curl',rep:'10',repN:11,unit:'kg',sets:3,grp:'Superset 2',tgt:'Biceps (long head)',vid:''},
-    {n:'Barbell Hip Thrust',rep:'12',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Glutes (heavy, ribs down)',vid:'LM8XHLYJoYs'},
-    {n:'Landmine Press',rep:'10/side',repN:10,unit:'kg',sets:3,grp:'Finisher',tgt:'Shoulders, upper chest',vid:''},
-    {n:'Cable Pullover',rep:'12',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Lats (top pulley)',vid:'G9uNaXGTJ4w'},
-    {n:'Seated DB Hammer Curl',rep:'12',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Biceps, brachialis',vid:'zC3nLlEvin4'},
-    {n:'DB Calf Raise',rep:'15',repN:15,unit:'kg',sets:3,grp:'Finisher',tgt:'Calves',vid:''},
-    {n:'Lying Leg Raise / Reverse Crunch',rep:'12',repN:13,unit:'reps',sets:2,grp:'Core',tgt:'Lower abs',vid:''}]},
-  C:{title:'Full Body C',sub:'Full Body',tag:'Incline anchor',ex:[
-    {n:'Barbell Incline Bench Press',rep:'10',repN:10,unit:'kg',sets:3,grp:'Strength',tgt:'Chest (upper), front delt',vid:''},
-    {n:'Chin-Ups (underhand)',rep:'8',repN:8,unit:'reps',sets:3,grp:'Superset 1',tgt:'Lats, biceps',vid:''},
-    {n:'Chest-Supported DB Rear Delt Fly',rep:'12',repN:13,unit:'kg',sets:3,grp:'Superset 1',tgt:'Rear delt',vid:'EA7u4Q_8HQ0'},
-    {n:'Cable Glute Kickback',rep:'12/side',repN:12,unit:'kg',sets:3,grp:'Superset 2',tgt:'Glutes (hip extension)',vid:'SqM9Mvfab4w'},
-    {n:'Cable Lateral Raise',rep:'12',repN:13,unit:'kg',sets:3,grp:'Superset 2',tgt:'Side delt',vid:''},
-    {n:'DB Romanian Deadlift',rep:'12',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Hamstrings, glutes',vid:'7AaaytTpRiA'},
-    {n:'Weighted Dips',rep:'10',repN:10,unit:'kg',sets:3,grp:'Finisher',tgt:'Chest, triceps (lean forward for chest)',vid:'2z8JmcrW-As'},
-    {n:'Single-Arm Cable Row',rep:'12/side',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Mid-back (brace free hand on bench)',vid:''},
-    {n:'Cable Rope Pushdown',rep:'12',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Triceps',vid:'WUu0oK5j7Hk'},
-    {n:'Dead Bug',rep:'8/side',repN:8,unit:'reps',sets:3,grp:'Finisher',tgt:'Core (anti-extension, back-friendly)',vid:'g_BYB0R-4Ws'}]}
+    {n:'Barbell Bench Press',rep:'8',repN:8,unit:'kg',sets:3,grp:'Strength',tgt:'Chest, front delt, triceps',vid:'rT7DgCr-3pg'},
+    {n:'Barbell Hip Thrust',rep:'10',repN:10,unit:'kg',sets:3,grp:'Strength',tgt:'Glutes (heavy, ribs down) — bar 2',vid:'LM8XHLYJoYs'},
+    {n:'Pull-Ups',rep:'8',repN:8,unit:'reps',sets:3,grp:'Superset 1',tgt:'Back, lats, biceps',vid:''},
+    {n:'DB Reverse Lunge',rep:'10/side',repN:10,unit:'kg',sets:3,grp:'Superset 1',tgt:'Quads, glutes',vid:'RZKXLMxPF_I'},
+    {n:'Single-Arm Cable Row',rep:'12/side',repN:12,unit:'kg',sets:3,grp:'Superset 2',tgt:'Back (no lower-back load)',vid:''},
+    {n:'Seated DB Shoulder Press',rep:'10',repN:10,unit:'kg',sets:3,grp:'Superset 2',tgt:'Shoulders (back supported)',vid:'qEwKCR5JCog'},
+    {n:'Cable Rope Pushdown',rep:'15',repN:15,unit:'kg',sets:3,grp:'Finisher',tgt:'Triceps',vid:'WUu0oK5j7Hk'},
+    {n:'Barbell Calf Raise',rep:'15',repN:15,unit:'kg',sets:3,grp:'Finisher',tgt:'Calves — use the hip-thrust bar, no plate change',vid:''},
+    {n:'Dead Bug',rep:'10/side',repN:10,unit:'reps',sets:3,grp:'Core',tgt:'Deep core, anti-arch (back-friendly)',vid:'g_BYB0R-4Ws'}]},
+  B:{title:'Full Body B',sub:'Full Body',tag:'Incline anchor',ex:[
+    {n:'Barbell Incline Bench Press',rep:'8',repN:8,unit:'kg',sets:3,grp:'Strength',tgt:'Upper chest, front delt',vid:''},
+    {n:'Barbell Overhead Press',rep:'8',repN:8,unit:'kg',sets:3,grp:'Strength',tgt:'Shoulders, triceps — bar 2 (clean it up to start)',vid:''},
+    {n:'Chin-Ups',rep:'8',repN:8,unit:'reps',sets:3,grp:'Superset 1',tgt:'Lats, biceps',vid:''},
+    {n:'Cable Pull-Through',rep:'12',repN:12,unit:'kg',sets:3,grp:'Superset 1',tgt:'Glutes, hamstrings (hip hinge)',vid:''},
+    {n:'Seated Cable Row',rep:'12',repN:12,unit:'kg',sets:3,grp:'Superset 2',tgt:'Mid-back (thickness)',vid:'EU7bOadUsNI'},
+    {n:'DB Lateral Raise',rep:'15',repN:15,unit:'kg',sets:3,grp:'Superset 2',tgt:'Side delt',vid:'3VcKaXpzqRo'},
+    {n:'Straight-Arm Pulldown',rep:'12',repN:12,unit:'kg',sets:3,grp:'Finisher',tgt:'Lats',vid:''},
+    {n:'Cable Curl',rep:'15',repN:15,unit:'kg',sets:3,grp:'Finisher',tgt:'Biceps',vid:'NFzTWp2qpiE'},
+    {n:'Seated DB Calf Raise',rep:'15',repN:15,unit:'kg',sets:3,grp:'Finisher',tgt:'Calves (soleus)',vid:''},
+    {n:'Reverse Crunch',rep:'15',repN:15,unit:'reps',sets:3,grp:'Core',tgt:'Lower abs — tucks pelvis (helps hip tilt)',vid:''}]}
 };
 const GRP_NOTE={
-  'Strength':'Your main lift — on its own · 3 sets · rest ~90s',
+  'Strength':'Your heavy lifts — each on its own bar · 3 sets · rest ~90s',
   'Superset 1':'Superset · 3 rounds · both moves back-to-back, rest ~60s',
   'Superset 2':'Superset · 3 rounds · both moves back-to-back, rest ~60s',
   'Finisher':'Mixed kit · push hard · short rest as needed · 2–3 rounds',
@@ -608,8 +594,8 @@ const ALTS={
   'Barbell Bench Press':[{n:'DB Bench Press',rep:'10',repN:9,unit:'kg',vid:'AuNRCrdhquE'},{n:'DB Floor Press',rep:'10',repN:9,unit:'kg',vid:''},{n:'Machine Chest Press',rep:'10',repN:11,unit:'kg',vid:'xUm0BiZCWlQ'}],
   'Barbell Incline Bench Press':[{n:'Incline DB Press',rep:'10',repN:9,unit:'kg',vid:''},{n:'Machine Chest Press',rep:'10',repN:11,unit:'kg',vid:'xUm0BiZCWlQ'}],
   'Standing Cable Leg Curl':[{n:'Cable Glute Kickback',rep:'12',repN:13,unit:'kg',vid:'SqM9Mvfab4w'},{n:'DB Glute Bridge',rep:'12',repN:13,unit:'kg',vid:'wQQ6N5piDG0'}],
-  'Pull-Ups (neutral grip)':[{n:'Band-Assisted Pull-Up',rep:'8',repN:8,unit:'reps',vid:'wFj808u2HWU'},{n:'Lat Pulldown',rep:'10',repN:11,unit:'kg',vid:'CAwf7n6Luuc'}],
-  'Chin-Ups (underhand)':[{n:'Lat Pulldown (underhand)',rep:'10',repN:11,unit:'kg',vid:'CAwf7n6Luuc'},{n:'Band-Assisted Chin-Up',rep:'8',repN:8,unit:'reps',vid:'wFj808u2HWU'}],
+  'Pull-Ups':[{n:'Band-Assisted Pull-Up',rep:'8',repN:8,unit:'reps',vid:'wFj808u2HWU'},{n:'Lat Pulldown',rep:'10',repN:11,unit:'kg',vid:'CAwf7n6Luuc'}],
+  'Chin-Ups':[{n:'Lat Pulldown (underhand)',rep:'10',repN:11,unit:'kg',vid:'CAwf7n6Luuc'},{n:'Band-Assisted Chin-Up',rep:'8',repN:8,unit:'reps',vid:'wFj808u2HWU'}],
   'Cable Pull-Through':[{n:'DB Single-Leg RDL',rep:'8/side',repN:8,unit:'kg',vid:'7AaaytTpRiA'},{n:'Hip Thrust',rep:'10',repN:11,unit:'kg',vid:'LM8XHLYJoYs'}],
   'Seated Cable Row':[{n:'One-Arm DB Row',rep:'10',repN:11,unit:'kg',vid:'W3fZzhw87ak'},{n:'Chest-Supported Row',rep:'10',repN:11,unit:'kg',vid:'tCM6BHr8wMg'}]
 };
@@ -617,6 +603,8 @@ function swapKey(k,name){ return k+'::'+name; }
 function effEx(k,x){ const s=state.swaps[swapKey(k,x.n)]; return s?{...x,n:s.n,rep:s.rep,repN:s.repN,unit:s.unit,vid:s.vid,_orig:x.n}:x; }
 function registerSwapMET(){ Object.values(state.swaps).forEach(s=>{ if(s&&s.n) MET[s.n]={unit:s.unit,reps:s.repN}; }); }
 registerSwapMET();
+// migrate old 3-day weekly plan (had a Circuit C) to the new 2-day plan
+if(state.plan && state.plan.some(f=>/circuit c/i.test(f||''))){ state.plan=defaultPlan(); DB.set('plan',state.plan); }
 // PT form cues per exercise
 const CUES={
   'Goblet Squat':'Chest tall, sit back between your hips, knees tracking over toes, drive the floor away.',
@@ -752,7 +740,7 @@ function renderQuote(){ const q=QUOTES[Math.floor(Math.random()*QUOTES.length)];
 function totalSessions(){ let n=0; Object.values(state.planDone).forEach(wk=>n+=Object.values(wk).filter(Boolean).length); return n; }
 function renderSnapshot(){
   const el=document.getElementById('snapTiles'); if(!el) return;
-  const wk=state.planDone[weekKey()]||{}; const trainDays=state.plan.filter(routineKeyForDay).length||3;
+  const wk=state.planDone[weekKey()]||{}; const trainDays=state.plan.filter(routineKeyForDay).length||2;
   const done=Object.values(wk).filter(Boolean).length;
   el.innerHTML=`<div class="tile"><b>${totalSessions()}</b><span>Sessions</span></div>
     <div class="tile"><b>${calcStreak()}</b><span>Step streak</span></div>
@@ -769,7 +757,7 @@ function renderDash(){
   document.getElementById('ringFg').style.strokeDashoffset=(2*Math.PI*52)*(1-pct);
   renderStepWeek();
   const wk=state.planDone[weekKey()]||{}, td=todayKey(), i=dayIdx();
-  const target=state.plan.filter(routineKeyForDay).length||3, doneCount=Object.values(wk).filter(Boolean).length;
+  const target=state.plan.filter(routineKeyForDay).length||2, doneCount=Object.values(wk).filter(Boolean).length;
   const trainedToday=!!wk[i], nk=nextCircuit(), r=ROUTINES[nk], didK=state.sessions[td];
   const hero=document.getElementById('heroToday');
   if(trainedToday){
@@ -843,7 +831,7 @@ function buildAlerts(){
   const st=state.steps[todayKey()]||0;
   if(h>=17 && st<state.goal*0.7) A.push({i:'👟',t:`${fmt(Math.max(state.goal-st,0))} steps to your goal — fit a walk in.`,go:"nav('dash')"});
   const di=dayIdx(), wk=state.planDone[weekKey()]||{};
-  const target=state.plan.filter(routineKeyForDay).length||3, doneWk=Object.values(wk).filter(Boolean).length, dow=(new Date().getDay()+6)%7;
+  const target=state.plan.filter(routineKeyForDay).length||2, doneWk=Object.values(wk).filter(Boolean).length, dow=(new Date().getDay()+6)%7;
   // weekly training nudge — flexible days: only if you're behind pace late in the week
   if(!wk[di] && doneWk<target && dow>=3 && h>=15){
     const left=target-doneWk;
@@ -904,7 +892,7 @@ function weekDatesSoFar(){ const arr=[]; const mon=new Date(weekKey()+'T00:00:00
   for(let i=0;i<7;i++){ const d=new Date(mon); d.setDate(mon.getDate()+i); const k=ymd(d); arr.push(k); if(k===today) break; } return arr; }
 function renderCoach(){
   const el=document.getElementById('coachCard'); if(!el) return;
-  const wk=state.planDone[weekKey()]||{}, trainDays=state.plan.filter(routineKeyForDay).length||3;
+  const wk=state.planDone[weekKey()]||{}, trainDays=state.plan.filter(routineKeyForDay).length||2;
   const done=Object.values(wk).filter(Boolean).length;
   const days=weekDatesSoFar(), T=calcTargets();
   const fdays=days.map(d=>macrosOf(foodOn(d))).filter(m=>m.kcal>0);
@@ -1814,7 +1802,7 @@ const baseOpts={responsive:true,plugins:{legend:{display:false}},
           y:{grid:{color:gridClr},ticks:{color:tickClr,font:{size:10}},beginAtZero:true}}};
 function sessionDates(){ const out={}; Object.keys(state.planDone).forEach(ws=>{ const wk=state.planDone[ws];
   Object.keys(wk).forEach(di=>{ if(wk[di]){ const d=new Date(ws+'T00:00:00'); d.setDate(d.getDate()+(+di)); out[ymd(d)]=+di; } }); }); return out; }
-function trainWeekStreak(){ const trainDays=state.plan.filter(routineKeyForDay).length||3;
+function trainWeekStreak(){ const trainDays=state.plan.filter(routineKeyForDay).length||2;
   const weeks=lastNWeeks(26).reverse(); let s=0, started=false;
   for(let i=0;i<weeks.length;i++){ const done=Object.values(state.planDone[weeks[i]]||{}).filter(Boolean).length;
     if(i===0 && done===0){ continue; } // forgive current week if not trained yet
